@@ -1,13 +1,20 @@
 import Map
 import LineDetector
 import CarControl
+from Detector import Detector
+import cv2
 from threading import Thread
+
 class Car: #три основных метода которые будут использоваться на соревнованиях MainRoad,CityRoad и Parking
-    '''законструктить паф файндер и лайн детектор'''
+    def __init__(self,device,video_source=0): #тут бы по хорошему проинициализировать все что у нас написано
+        self.CarCon=CarControl(device) # кар контролу передаем девайс которым пользуемся
+        self.TroubleDet=self.TroubleChecking(video_source)
+        self.LineDet=self.LineChecking(video_source)
+
     class TroubleChecking(Thread):  #поток для детектирования знаков и ситуаций на дороге
-        def __init__(self):
+        def __init__(self,video_source):
             Thread.__init__(self)
-            self.SemAndSigDetector=PathFinder()#тут сложный конструктор
+            self.Detector=Detector('signs/model.yaml','signs/model.h5','semafor/model.yaml','semafor/model.h5',True,video_source)
             self.crossroad=0
             self.signs = 0
             self.RedIsON=False
@@ -15,30 +22,40 @@ class Car: #три основных метода которые будут ис�
 
         def run(self): # по задумке 0-прямая дорога, 1-перекресток, 2-знак,3-препятствие
             self.mark=True
-            while (self.mark):
-                self.crossroad = DetectCrossroads() #так
-                self.signs = DetectSigns()   #1 - кирпич (красный знак стоп) 3 - движение вперед 4 - направо 5 - налево 6 - прямо или направо 7 - прямо или налево
-                self.RedIsON = DetectSems()   #DetectSigns нужно описать
+            frame = self.cap.read()[1]
+            while (self.mark and self.Detector.cap.isOpened() and len(frame) > 0):
+                    frame = cv2.resize(frame, self.Detector.size, interpolation=cv2.INTER_CUBIC)
+                    self.signs = self.Detector.detectSigns(frame, self.Detector.printFlag)
+                    self.RedIsON = self.Detector.detectSemafors(frame,self.Detector.printFlag) #1 - кирпич (красный знак стоп) 3 - движение вперед 4 - направо 5 - налево 6 - прямо или направо 7 - прямо или налево
+                    frame = self.Detector.cap.read()[1]
+                    self.crossroad = self.Detector.DetectCrossroads()  # так этого нет но оно бы пригодилось
+
+            self.Detector.cap.release()
+
 
     '''Конструктить'''
     class LineChecking(Thread):  #поток для детектирования полос
-        def __init__(self):
+        def __init__(self,video_source):
             Thread.__init__(self)
-            self.Road=LineDetector.RoadControl() #инициализация контроля дороги
+            self.cap = cv2.VideoCapture(video_source)
             self.lines = 0
             self.mark=False
 
         def run(self):
             self.mark=True
+            frame = self.cap.read()[1]
+            vecs = [[-3, -1, 70], [3, -1, 70]]
+            self.Road = LineDetector.RoadControl(frame, 240, vecs, viz=True)
+
             while (self.mark):
+                self.Detector.line_detector.img = frame
+                print(self.Road.poke())
                 self.lines = self.Road.poke()
 
 
-    '''конструктить всё'''
-    def __init__(self,device): #тут бы по хорошему проинициализировать все что у нас написано
-        self.CarCon=CarControl(device) # кар контролу передаем девайс которым пользуемся
-        self.TroubleDet=TroubleChecking()
-        self.LineDet=LineChecking()
+
+
+
 
     '''идеально'''
     def SemaforHandler(self):
@@ -188,6 +205,7 @@ class Car: #три основных метода которые будут ис�
         self.TroubleDet.mark = False
         self.LineDet.mark = False
         return 4
+
 
 
 
