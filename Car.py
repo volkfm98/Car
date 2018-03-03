@@ -67,6 +67,7 @@ class Car: #три основных метода которые будут ис�
             self.walls = 0 #0 слева 1 спереди 2 справа
             self.mark=False
             self.WD=WallDetector()
+            self.crossroad=false
 
         def run(self):
             self.mark=True
@@ -74,13 +75,13 @@ class Car: #три основных метода которые будут ис�
 
             while (self.mark):
                 self.walls = self.WD.Detect()
-
-
-
-
-
-
-    '''идеально'''
+                if (self.walls[] or self.walls[]): #подставить константы
+                    self.crossroad=True
+                else:
+                    self.crossroad=False
+              
+            
+            
     def SemaforHandler(self):
         while (self.TroubleDet.RedIsON):
             pass
@@ -130,20 +131,31 @@ class Car: #три основных метода которые будут ис�
             while (NotCrossed): #как-то задетектить что мы проехали участок
                 self.CarCon.move()
                 self.CarCon.turn()
-        if direction==-2: #разворот
-            while (NotCrossed): #как-то задетектить что мы проехали участок
-                self.CarCon.move()
-                self.CarCon.turn()
         return
 
 
 
-
-    '''тут надо настроить оцентрирование'''
-    def StayOnTheLine(self):
-        while(self.TroubleDet.crossroad==0): #проверяем что ничего нового не встретилось
+    def SimpleLine(self):#езда без учета знаков
+        while(not self.WallDet.crossroad): #проверяем что ничего нового не встретилось
+            self.SemaforHandler()
+            if self.LineDet.lines[0] or self.walls[0]: #отъезжаем от стены или от линии подобрать константы
+                    self.CarCon.move()
+                    pass
+                    #отворачиваем
+                if self.LineDet.lines[1] or self.walls[2]:  # 
+                    self.CarCon.move()
+                    pass
+                    #отворачиваем
+                else:
+                    self.CarCon.move() #прямо
+        return self.TroubleDet.crossroad #иначе завершаем движение и выдаем почему завершили
+    
+    
+    def StayOnTheLine(self, joint): #двигаемся по маршруту
+        while(not self.WallDet.crossroad): #проверяем что ничего нового не встретилось
+            self.SemaforHandler()
             if (self.TroubleDet.signs!=0):
-                self.SignHandler(self.TroubleDet.signs)
+                self.SignHandler(self.TroubleDet.signs,joint)
             else:
                 if self.LineDet.lines[0] or self.walls[0]: #отъезжаем от стены или от линии подобрать константы
                     self.CarCon.move()
@@ -168,8 +180,8 @@ class Car: #три основных метода которые будут ис�
         self.TroubleDet.start()
         self.LineDet.start()
         for i in range(2):#всего два поворота ведь так7
-            self.StayOnTheLine(); #держимся нашей прямой
-            if (self.TroubleDet.signs==6 or self.TroubleDet.crossroad==1 or self.TroubleDet.signs==4): #поворот открылся направо
+            self.SimpleLine(); #держимся нашей прямой
+            if (self.TroubleDet.signs==6 or self.WallDet.crossroad or self.TroubleDet.signs==4): #поворот открылся направо
                 # на самом деле достаточно знать только что правый поворот открыт но пока можно говорить что это все перекрестки
                 self.TurnOn(1)
         self.TroubleDet.mark = False
@@ -197,16 +209,16 @@ class Car: #три основных метода которые будут ис�
             for joint in self.Path:
                 direction=self.map.directions[prev+str(joint.id)] #смотрим направление поворота на данном перекресте
                 self.Car.TurnOn(direction) #поворачиваем на повороте 0 прямо 1 право -1 влево 2 круговое движение
-                sign=self.StayOnTheLine() #едем и держимся линии пока ничего не мешает
+                sign=self.StayOnTheLine(joint) #едем и держимся линии пока ничего не мешает
                 prev=str(joint.id) #для вычисления следующего направления запоминаем ребро по которому поехали
-                if (self.TroubleDet.signs!=1): #если что-то помешало придется вернутся и перестроить маршрут удаляя это ребро
+                if (not self.WallDet.crossroad): #если что-то помешало придется вернутся и перестроить маршрут удаляя это ребро
                     #аналогично if(trouble==3) можно использовать
                     joint.Delete()
                     self.Path=self.map.FindTheWay(startDot,finishDot)
                     self.TurnOn(-2) #придется развернутся -2 разворот
                     break
-            else:
-                startDot=joint.GetNegative(startDot)#если оказались на перекрестке продолжаем движение'''
+                else:
+                    startDot=joint.GetNegative(startDot)#если оказались на перекрестке продолжаем движение'''
         self.WallDet.mark=False
         self.TroubleDet.mark = False
         self.LineDet.mark = False
@@ -219,7 +231,7 @@ class Car: #три основных метода которые будут ис�
         
         
         While (not DetectedCrossroad):
-            self.StayOnTheLine()
+            self.SimpleLine()
         
         return 3
 
@@ -229,7 +241,6 @@ class Car: #три основных метода которые будут ис�
     def Parking(self):
         self.WallDet.start()
         self.LineDet.parking=True
-        self.TroubleDet.start()
         self.LineDet.start()
         
         While (ParkingDis меньше const): #подъезжаем
@@ -239,7 +250,6 @@ class Car: #три основных метода которые будут ис�
         
         
         self.WallDet.mark=False
-        self.TroubleDet.mark = False
         self.LineDet.mark = False
         return 4
 
