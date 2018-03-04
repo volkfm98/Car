@@ -1,4 +1,6 @@
 import Map
+
+#only for map testing
 class Car:
 
     def CityRoad(self):

@@ -2,10 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ce96704e-92e1-44f3-8b40-dfdbd7644967" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/Car.py" afterPath="$PROJECT_DIR$/Car.py" />
-      <change beforePath="$PROJECT_DIR$/Map.py" afterPath="$PROJECT_DIR$/Map.py" />
       <change beforePath="$PROJECT_DIR$/OnlyPath.py" afterPath="$PROJECT_DIR$/OnlyPath.py" />
-      <change beforePath="$PROJECT_DIR$/newmap.png" afterPath="$PROJECT_DIR$/newmap.png" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -41,8 +38,8 @@
       <file leaf-file-name="OnlyPath.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/OnlyPath.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="306">
-              <caret line="18" column="40" lean-forward="true" selection-start-line="18" selection-start-column="40" selection-end-line="18" selection-end-column="40" />
+            <state relative-caret-position="85">
+              <caret line="5" column="23" lean-forward="true" selection-start-line="5" selection-start-column="23" selection-end-line="5" selection-end-column="23" />
               <folding />
             </state>
           </provider>
@@ -66,9 +63,9 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/OnlyPath.py" />
         <option value="$PROJECT_DIR$/Map.py" />
         <option value="$PROJECT_DIR$/Car.py" />
+        <option value="$PROJECT_DIR$/OnlyPath.py" />
       </list>
     </option>
   </component>
@@ -266,8 +263,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/OnlyPath.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="306">
-          <caret line="18" column="40" lean-forward="true" selection-start-line="18" selection-start-column="40" selection-end-line="18" selection-end-column="40" />
+        <state relative-caret-position="85">
+          <caret line="5" column="23" lean-forward="true" selection-start-line="5" selection-start-column="23" selection-end-line="5" selection-end-column="23" />
           <folding />
         </state>
       </provider>
