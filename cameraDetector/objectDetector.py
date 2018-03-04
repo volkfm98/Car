@@ -13,7 +13,7 @@ from cv2 import HOGDescriptor
 
 #from testMethod import DetectRedSign
 
-class objectDetector:
+class Detector:
     
     def __init__(self):
         self.json_file_red = open('model_red_good.json', 'r')
