@@ -11,6 +11,10 @@ class Car: #три основных метода которые будут ис�
         self.TroubleDet=self.TroubleChecking(video_source)
         self.LineDet=self.LineChecking(video_source)
         self.WallDet=self.WallThread() #детектор стен
+        self.prev=0
+        self.startDot=0
+
+
 
     class TroubleChecking(Thread):  #поток для детектирования знаков и ситуаций на дороге
         def __init__(self,video_source):
@@ -55,6 +59,7 @@ class Car: #три основных метода которые будут ис�
                     self.lines = self.Road.poke()
             else:
                 while (self.mark):
+                    pass
                     #detect parking
                 
                 
@@ -127,7 +132,7 @@ class Car: #три основных метода которые будут ис�
             while (NotCrossed): #как-то задетектить что мы проехали участок
                 self.CarCon.move()
                 self.CarCon.turn()
-        if direction==2: #выезд на круговое
+        if direction==-2: #разворот
             while (NotCrossed): #как-то задетектить что мы проехали участок
                 self.CarCon.move()
                 self.CarCon.turn()
@@ -187,28 +192,32 @@ class Car: #три основных метода которые будут ис�
         self.TroubleDet.mark = False
         self.LineDet.mark = False
         self.WallDet.mark= False
-        return StartDot  # по идее должна вернуть значение обозначающее на каком повороте мы заехали
+        self.startDot=-2
+        return 1  # по идее должна вернуть значение обозначающее на каком повороте мы заехали
 
     def CityRoad(self,startDot):
+
         self.WallDet.start()
         self.TroubleDet.start()
         self.LineDet.start()
-        self.map = Map.MyMap(open('newmap.txt')) #нам нужна карта для построения маршрута
+        self.map = Map.MyMap(open('graph.txt')) #нам нужна карта для построения маршрута
+
+        for joint in self.map.joints: #-2 если на втором повороте заехали, -1 если на первом для ключей
+            if joint.leftDot.id==self.startDot:
+                self.prev=joint
         for dot in self.map.dots:
-            if dot.id==1:
-                startDot=dot
+            if dot.id==self.startDot:
+                self.startDot=dot
             if dot.id==18:
                 finishDot=dot
-        self.map.SetDirections(open('newdirections.txt'))
         self.Path=self.map.FindTheWay(startDot,finishDot) #теперь наш путь лежит в path
-        prev=str(-2) #-2 если на втором повороте заехали, -1 если на первом для клучей
         #идея такая пытаемся поехать в нужном направлении не получилось удаляем ребро, по новой считаем
         while (startDot!=finishDot): #пока не доехали до финиша
             for joint in self.Path:
-                direction=self.map.directions[prev+str(joint.id)] #смотрим направление поворота на данном перекресте
+                direction=self.map.GetTurnDirection(self.prev,joint) #смотрим направление поворота на данном перекресте
                 self.Car.TurnOn(direction) #поворачиваем на повороте 0 прямо 1 право -1 влево 2 круговое движение
                 self.StayOnTheLine(joint) #едем и держимся линии пока ничего не мешает
-                prev=str(joint.id) #для вычисления следующего направления запоминаем ребро по которому поехали
+                self.prev=joint #для вычисления следующего направления запоминаем ребро по которому поехали
                 if (not self.WallDet.crossroad): #если что-то помешало придется вернутся и перестроить маршрут удаляя это ребро
                     #аналогично if(trouble==3) можно использовать
                     joint.Delete()
@@ -216,7 +225,7 @@ class Car: #три основных метода которые будут ис�
                     self.TurnOn(-2) #придется развернутся -2 разворот
                     break
                 else:
-                    startDot=joint.GetNegative(startDot)#если оказались на перекрестке продолжаем движение'''
+                    self.startDot=joint.GetNegative(self.startDot)#если оказались на перекрестке продолжаем движение'''
         self.WallDet.mark=False
         self.TroubleDet.mark = False
         self.LineDet.mark = False
@@ -249,7 +258,7 @@ class Car: #три основных метода которые будут ис�
         self.LineDet.parking=True
         self.LineDet.start()
         
-        While (ParkingDis меньше const): #подъезжаем
+        while (ParkingDis меньше const): #подъезжаем
            self.CarCon.move()
         
         #паркуемся
