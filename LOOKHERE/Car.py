@@ -18,8 +18,9 @@ class Car: #три основных метода которые будут ис�
         self.CarCon=CarControl(device) # кар контролу передаем девайс которым пользуемся
         self.TroubleDet=self.SignThread()
         self.LineDet=self.LineChecking()
-        self.WallDet=self.WallThread() #детектор стен
-        self.CW=self.CameraWrapper()
+        self.CW=self.CameraWrapper(LineDet,TroubleDet)
+        self.WallDet=self.WallThread(CarCon) #детектор стен
+        
 
 
 
@@ -27,7 +28,7 @@ class Car: #три основных метода которые будут ис�
         self.startDot=0
 
     class CameraWrapper(Thread):
-        def __init__(self):
+        def __init__(self,L,T):
             Thread.__init__(self)
             self.camera = PiCamera()
             self.camera.resolution = (CarSettings.PiCameraResW, CarSettings.PiCameraResH)
@@ -37,6 +38,8 @@ class Car: #три основных метода которые будут ис�
             self.rawCapture = PiRGBArray(self.camera, size=(CarSettings.PiCameraResW, CarSettings.PiCameraResH))
             self.image=0
             self.mark=False
+            self.L=L
+            self.T=T
 
 
         def run(self):  #
@@ -44,11 +47,9 @@ class Car: #три основных метода которые будут ис�
             while (self.mark):
                 for frame in self.camera.capture_continuous(self.rawCapture, format="bgr", use_video_port=True):
 
-                    self.image = frame.array
-                    # данные от детекторов знаков и светофоров подряд
-                    isBrick = dtc.DetectRedSign(image, True)
-                    BSign = dtc.DetectBlueSign(image, True)
-                    isTrLight = dtc.DetectTrLight(frame, True)
+                    image = frame.array
+                    s.L.frame=image.copy()
+                    s.T.frame=image
                     k = cv2.waitKey(30) & 0xff
                     if k == 27:
                         break;
@@ -60,7 +61,7 @@ class Car: #три основных метода которые будут ис�
 
 
 
-        pass
+            pass
 
     class SignThread(Thread):  #поток для детектирования знаков и ситуаций на дороге
         def __init__(self):
@@ -69,17 +70,15 @@ class Car: #три основных метода которые будут ис�
             self.signs = 0
             self.RedIsON=False
             self.mark=False
+            self.frame=[]
+            self.brick=0
 
         def run(self): # по задумке 0-прямая дорога, 1-перекресток, 2-знак,3-препятствие
             self.mark=True
-            frame = self.cap.read()[1]
-            while (self.mark and self.Detector.cap.isOpened() and len(frame) > 0):
-                    frame = cv2.resize(frame, self.Detector.size, interpolation=cv2.INTER_CUBIC)
-                    self.signs = self.Detector.detectSigns(frame, self.Detector.printFlag)
-                    self.RedIsON = self.Detector.detectSemafors(frame,self.Detector.printFlag) #1 - кирпич (красный знак стоп) 3 - движение вперед 4 - направо 5 - налево 6 - прямо или направо 7 - прямо или налево
-                    frame = self.Detector.cap.read()[1]
-
-            self.Detector.cap.release()
+            while (self.mark):
+                    self.brick=self.Detecctor.DetectRedSign(self.frame, False)
+                    self.signs = self.DetectBlueSign(self.frame, False)
+                    self.RedIsON = self.Detector.DetectTrLight(self.frame, False) #1 - кирпич (красный знак стоп) 3 - движение вперед 4 - направо 5 - налево 6 - прямо или направо 7 - прямо или налево
 
 
     '''Конструктить'''
@@ -89,19 +88,19 @@ class Car: #три основных метода которые будут ис�
             self.lines = 0
             self.mark=False
             self.parking=False
+            self.frane=[]
+            self.Road=0
 
         def run(self):
             
             self.mark=True
             if (not self.parking):
-                frame = c
                 vecs = [[-3, -1, 70], [3, -1, 70]]
-                self.Road = LineDetector.RoadControl(frame, 240, vecs, viz=True)
+                self.Road = LineDetector.RoadControl(self.frame, 240, vecs, viz=True)
 
                 while (self.mark):
-                    self.Detector.line_detector.img = frame
-                    print(self.Road.poke())
-                    self.lines = self.Road.poke()
+                    print(self.Road.poke(self.frame))
+                    self.lines = self.Road.poke(self.frame)
             else:
                 while (self.mark):
                     pass
@@ -113,7 +112,7 @@ class Car: #три основных метода которые будут ис�
     class WallThread(Thread):  #поток для детектирования стен
         def __init__(self,device):
             Thread.__init__(self)
-            self.cap = cv2.VideoCapture(video_source)
+            self.C=device
             self.walls = 0 #0 слева 1 спереди 2 справа
             self.mark=False
             self.WD=WallDetector()
